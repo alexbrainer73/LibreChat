@@ -110,7 +110,7 @@ sequenceDiagram
     Storage->>Encoder: 35. Retorna buffer/base64
     deactivate Storage
 
-    Encoder->>Encoder: 36. Formata por provider:<br/><br/>OpenAI:<br/>{type: 'image_url',<br/>image_url: {url: 'data:image/...;base64,...', detail: 'auto'}}<br/><br/>Anthropic:<br/>{type: 'image',<br/>source: {type: 'base64', media_type: '...', data: '...'}}<br/><br/>Google:<br/>{inlineData: {mimeType: '...', data: '...'}}
+    Encoder->>Encoder: 36. Formata por provider<br/>OpenAI: image_url com data URI base64<br/>Anthropic: source com base64<br/>Google: inlineData com base64
 
     Encoder->>Builder: 37. Retorna {files[], image_urls[]}
     deactivate Encoder
