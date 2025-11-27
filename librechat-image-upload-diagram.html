@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LibreChat - Diagrama de Fluxo de Upload de Imagem</title>
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            sequence: {
+                diagramMarginX: 50,
+                diagramMarginY: 10,
+                actorMargin: 50,
+                width: 150,
+                height: 65,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 35
+            },
+            themeVariables: {
+                fontSize: '16px',
+                fontFamily: 'Arial, Helvetica, sans-serif'
+            }
+        });
+
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const svg = document.querySelector('.mermaid svg');
+                if (svg) {
+                    console.log('✓ Diagrama renderizado com sucesso!');
+                    console.log('📸 Para salvar como imagem:');
+                    console.log('   1. Clique com botão direito no diagrama');
+                    console.log('   2. Selecione "Salvar imagem como..." ou "Copiar imagem"');
+                    console.log('   3. Ou use Ctrl+P (Imprimir) → "Salvar como PDF"');
+
+                    // Add download button
+                    const btn = document.createElement('button');
+                    btn.textContent = '💾 Baixar SVG';
+                    btn.style.cssText = 'position:fixed;top:20px;right:20px;padding:12px 24px;background:#0066cc;color:white;border:none;border-radius:6px;font-size:16px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.2);z-index:9999;';
+                    btn.onclick = () => {
+                        const svgData = svg.outerHTML;
+                        const blob = new Blob([svgData], {type: 'image/svg+xml'});
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'librechat-image-upload-flow.svg';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                    };
+                    document.body.appendChild(btn);
+                }
+            }, 2000);
+        });
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .diagram-container {
+            padding: 40px;
+            background: white;
+            overflow-x: auto;
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            min-width: fit-content;
+        }
+
+        .instructions {
+            background: #f8f9fa;
+            padding: 30px 40px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .instructions h2 {
+            color: #2a5298;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .instructions ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .instructions li {
+            padding: 8px 0;
+            color: #495057;
+            font-size: 14px;
+        }
+
+        .instructions li::before {
+            content: "→ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 14px;
+            background: #f8f9fa;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+            }
+            header, .instructions, footer, button {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LibreChat - Fluxo de Upload de Imagem</h1>
+            <p class="subtitle">Diagrama de Sequência Completo: Frontend → Backend → LLM</p>
+        </header>
+
+        <div class="diagram-container">
+            <div class="mermaid">
+sequenceDiagram
+    actor User as Usuário
+    participant UI as Frontend UI<br/>(FileUpload.tsx)
+    participant Hook as useFileHandling<br/>Hook
+    participant Upload as Upload Mutation<br/>(API Client)
+    participant API as Backend API<br/>(/api/v1/files/images)
+    participant Multer as Multer<br/>Middleware
+    participant Process as Image Processor<br/>(processImageFile)
+    participant Sharp as Sharp Library<br/>(Resize/Convert)
+    participant Storage as File Storage<br/>(Local/Firebase/OpenAI)
+    participant DB as Database<br/>(File Record)
+    participant Chat as Chat Hook<br/>(useChatFunctions)
+    participant SSE as SSE Client<br/>(useSSE)
+    participant ChatAPI as Chat API<br/>(/api/ask)
+    participant Builder as Message Builder<br/>(buildMessages)
+    participant Encoder as Image Encoder<br/>(encodeAndFormat)
+    participant LLM as LLM Provider<br/>(OpenAI/Anthropic/Google)
+    participant Events as SSE Events<br/>(useEventHandlers)
+
+    %% ===== FASE 1: UPLOAD DE IMAGEM =====
+    Note over User,DB: FASE 1: Upload e Processamento da Imagem
+
+    User->>UI: 1. Seleciona/Arrasta Imagem
+    activate UI
+    UI->>Hook: 2. handleFileChange(file)
+    activate Hook
+
+    Hook->>Hook: 3. validateFiles()<br/>- Valida MIME type<br/>- Valida tamanho<br/>- Valida limite de arquivos
+
+    Hook->>Hook: 4. loadImage()<br/>- Cria URL preview<br/>- Obtém dimensões (width/height)
+
+    Hook->>UI: 5. Atualiza estado com preview
+    UI->>User: 6. Mostra preview da imagem
+    deactivate UI
+
+    Hook->>Upload: 7. startUpload(file)<br/>FormData: {file, file_id, width, height, endpoint}
+    activate Upload
+
+    Upload->>API: 8. POST /api/v1/files/images<br/>Content-Type: multipart/form-data
+    activate API
+
+    API->>Multer: 9. Recebe upload
+    activate Multer
+    Multer->>Multer: 10. Salva em /uploads/temp/userId/<br/>Gera file_id (UUID)
+    Multer->>API: 11. Retorna file info
+    deactivate Multer
+
+    API->>Process: 12. processImageFile(file)
+    activate Process
+
+    Process->>Sharp: 13. convertImage()<br/>- Resize baseado em resolução<br/>- Converte para formato config
+    activate Sharp
+    Sharp->>Sharp: 14. Processa imagem<br/>(redimensiona, otimiza)
+    Sharp->>Storage: 15. Salva imagem processada
+    activate Storage
+    Storage->>Sharp: 16. Retorna filepath
+    deactivate Storage
+    Sharp->>Process: 17. Retorna {filepath, bytes, width, height}
+    deactivate Sharp
+
+    Process->>DB: 18. Cria registro File<br/>{user, file_id, filepath, type, width, height, bytes}
+    activate DB
+    DB->>Process: 19. Confirma salvamento
+    deactivate DB
+
+    Process->>API: 20. Retorna metadata
+    deactivate Process
+
+    API->>Upload: 21. Response 200<br/>{file_id, filepath, width, height, type}
+    deactivate API
+
+    Upload->>Hook: 22. onSuccess(fileData)
+    deactivate Upload
+
+    Hook->>Hook: 23. updateFileById()<br/>- Atualiza progresso para 100%<br/>- Salva filepath
+    Hook->>UI: 24. Atualiza UI
+    deactivate Hook
+    activate UI
+    UI->>User: 25. Mostra imagem carregada<br/>(progresso 100%)
+    deactivate UI
+
+    %% ===== FASE 2: ENVIO DA MENSAGEM COM IMAGEM =====
+    Note over User,Events: FASE 2: Composição e Envio da Mensagem
+
+    User->>UI: 26. Digita mensagem e envia
+    activate UI
+    UI->>Chat: 27. submitMessage()
+    activate Chat
+
+    Chat->>Chat: 28. Cria userMessage com files<br/>files: [{file_id, filepath, type, width, height}]
+
+    Chat->>SSE: 29. sendMessage(submission)<br/>{userMessage, endpointOption, files}
+    activate SSE
+    deactivate Chat
+    deactivate UI
+
+    SSE->>ChatAPI: 30. POST /api/ask<br/>Content-Type: application/json<br/>Authorization: Bearer token
+    activate ChatAPI
+
+    ChatAPI->>ChatAPI: 31. buildEndpointOption()<br/>endpointOption.attachments = processFiles(files)
+
+    ChatAPI->>Builder: 32. buildMessages()<br/>- Detecta vision request<br/>- Seleciona modelo vision
+    activate Builder
+
+    Builder->>Encoder: 33. encodeAndFormat(files, endpoint)
+    activate Encoder
+
+    Encoder->>Storage: 34. Obtém imagem do storage
+    activate Storage
+    Storage->>Encoder: 35. Retorna buffer/base64
+    deactivate Storage
+
+    Encoder->>Encoder: 36. Formata por provider:<br/><br/>OpenAI:<br/>{type: 'image_url',<br/>image_url: {url: 'data:image/...;base64,...', detail: 'auto'}}<br/><br/>Anthropic:<br/>{type: 'image',<br/>source: {type: 'base64', media_type: '...', data: '...'}}<br/><br/>Google:<br/>{inlineData: {mimeType: '...', data: '...'}}
+
+    Encoder->>Builder: 37. Retorna {files[], image_urls[]}
+    deactivate Encoder
+
+    Builder->>Builder: 38. formatVisionMessage()<br/>- Cria content array<br/>- Combina texto + imagens
+
+    Builder->>ChatAPI: 39. Retorna payload formatado
+    deactivate Builder
+
+    %% ===== FASE 3: PROCESSAMENTO PELA LLM =====
+    Note over ChatAPI,Events: FASE 3: Processamento pela LLM e Resposta
+
+    ChatAPI->>LLM: 40. sendCompletion(payload)<br/>Mensagem com imagem codificada
+    activate LLM
+
+    LLM->>LLM: 41. Modelo Vision processa:<br/>- Analisa imagem<br/>- Gera resposta baseada em imagem + texto
+
+    LLM->>ChatAPI: 42. Stream: chunk 1 (SSE)
+    ChatAPI->>Events: 43. event: 'message'<br/>data: {text: "..."}
+    activate Events
+    Events->>UI: 44. Atualiza mensagem parcial
+    activate UI
+    UI->>User: 45. Mostra texto streaming
+    deactivate UI
+    deactivate Events
+
+    LLM->>ChatAPI: 46. Stream: chunk 2 (SSE)
+    ChatAPI->>Events: 47. event: 'message'
+    activate Events
+    Events->>UI: 48. Atualiza mensagem
+    activate UI
+    UI->>User: 49. Atualiza texto
+    deactivate UI
+    deactivate Events
+
+    LLM->>ChatAPI: 50. Stream: chunk N (final)
+    deactivate LLM
+
+    ChatAPI->>DB: 51. Salva mensagens<br/>(user message + assistant response)
+    activate DB
+    DB->>ChatAPI: 52. Confirma
+    deactivate DB
+
+    ChatAPI->>Events: 53. event: 'final'<br/>data: {messageId, text, conversationId}
+    activate Events
+    deactivate ChatAPI
+
+    Events->>UI: 54. Atualiza mensagem final
+    activate UI
+    deactivate SSE
+
+    UI->>User: 55. Exibe resposta completa da LLM
+    deactivate UI
+    deactivate Events
+
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h2>📋 Como salvar este diagrama</h2>
+            <ul>
+                <li>Clique no botão "💾 Baixar SVG" no canto superior direito</li>
+                <li>Ou clique com botão direito no diagrama → "Salvar imagem como..."</li>
+                <li>Ou use Ctrl+P (Cmd+P no Mac) → "Salvar como PDF"</li>
+                <li>Para converter SVG em PNG: use https://cloudconvert.com/svg-to-png</li>
+            </ul>
+        </div>
+
+        <footer>
+            <p>Gerado automaticamente a partir da análise do código do LibreChat</p>
+            <p>55 passos sequenciais | 3 fases principais | Suporte a OpenAI, Anthropic e Google</p>
+        </footer>
+    </div>
+</body>
+</html>
